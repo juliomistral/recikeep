@@ -8,6 +8,19 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Adding model 'Tag'
+        db.create_table('recipes_tag', (
+            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('modified', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('id', self.gf('django.db.models.fields.CharField')(max_length=36, primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='tags', to=orm['auth.User'])),
+        ))
+        db.send_create_signal('recipes', ['Tag'])
+
+        # Adding unique constraint on 'Tag', fields ['name', 'user']
+        db.create_unique('recipes_tag', ['name', 'user_id'])
+
         # Adding model 'Recipe'
         db.create_table('recipes_recipe', (
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
@@ -16,11 +29,19 @@ class Migration(SchemaMigration):
             ('activate_date', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
             ('deactivate_date', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
             ('id', self.gf('django.db.models.fields.CharField')(max_length=36, primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=250, null=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=250)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='recipes', to=orm['auth.User'])),
             ('original_location', self.gf('django.db.models.fields.URLField')(max_length=200, null=True)),
         ))
         db.send_create_signal('recipes', ['Recipe'])
+
+        # Adding M2M table for field tags on 'Recipe'
+        db.create_table('recipes_recipe_to_tag', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('recipe', models.ForeignKey(orm['recipes.recipe'], null=False)),
+            ('tag', models.ForeignKey(orm['recipes.tag'], null=False))
+        ))
+        db.create_unique('recipes_recipe_to_tag', ['recipe_id', 'tag_id'])
 
         # Adding model 'Ingredient'
         db.create_table('recipes_ingredient', (
@@ -47,8 +68,17 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
+        # Removing unique constraint on 'Tag', fields ['name', 'user']
+        db.delete_unique('recipes_tag', ['name', 'user_id'])
+
+        # Deleting model 'Tag'
+        db.delete_table('recipes_tag')
+
         # Deleting model 'Recipe'
         db.delete_table('recipes_recipe')
+
+        # Removing M2M table for field tags on 'Recipe'
+        db.delete_table('recipes_recipe_to_tag')
 
         # Deleting model 'Ingredient'
         db.delete_table('recipes_ingredient')
@@ -112,9 +142,10 @@ class Migration(SchemaMigration):
             'deactivate_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '250', 'null': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             'original_location': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True'}),
             'status': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
+            'tags': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['recipes.Tag']", 'db_table': "'recipes_recipe_to_tag'", 'symmetrical': 'False'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'recipes'", 'to': "orm['auth.User']"})
         },
         'recipes.step': {
@@ -124,6 +155,14 @@ class Migration(SchemaMigration):
             'instruction': ('django.db.models.fields.TextField', [], {}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'sequence': ('django.db.models.fields.PositiveIntegerField', [], {})
+        },
+        'recipes.tag': {
+            'Meta': {'unique_together': "(('name', 'user'),)", 'object_name': 'Tag'},
+            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '36', 'primary_key': 'True'}),
+            'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'tags'", 'to': "orm['auth.User']"})
         }
     }
 
