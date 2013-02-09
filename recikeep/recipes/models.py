@@ -23,6 +23,10 @@ class Recipe(ActivatorModel, TimeStampedModel):
     original_location = models.URLField(null=True)
     tags = models.ManyToManyField(Tag, db_table="recipes_recipe_to_tag")
 
+    @property
+    def tag_list(self):
+        return ", ".join(self.tags.all())
+
 
 class IngredientManager(models.Manager):
     def create_from_list_for_recipe(self, raw_ingredients, recipe):
