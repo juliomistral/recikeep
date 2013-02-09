@@ -116,6 +116,7 @@ INSTALLED_APPS = (
     'south',
     'django_nose',
     'django.contrib.admin',
+    'rest_framework',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
