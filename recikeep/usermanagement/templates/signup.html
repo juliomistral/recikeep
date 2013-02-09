@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<form action="/user/signup" method="post">
+<form action="/users/signup" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Submit" />
